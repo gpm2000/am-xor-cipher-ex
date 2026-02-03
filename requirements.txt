@@ -1,0 +1,12 @@
+# XOR Cipher with Diffie-Hellman Key Exchange
+# 
+# No external dependencies required - uses only Python standard library
+# 
+# Standard library modules used:
+# - hashlib: Cryptographic hashing (SHA256)
+# - json: Data serialization
+# - os: File system operations
+# - sys: System utilities
+
+# Python version requirement
+python>=3.7
