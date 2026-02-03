@@ -15,10 +15,13 @@ derived from Diffie-Hellman key exchange combined with XOR cipher encryption.
     - Validate message integrity and authenticity
 """
 
+import logging
 from key_generator import get_shared_key_for_party, get_stretched_key
 from xor_utils import xor_cipher
 from config import ENCRYPTED_MESSAGE_FILE, SECRET_MESSAGE_FILE, DATA_DIR
 from os import path
+
+logger = logging.getLogger(__name__)
 
 def encrypt_message(party, other_party) -> None:
     """Encrypt message using Diffie-Hellman shared secret.
@@ -33,19 +36,34 @@ def encrypt_message(party, other_party) -> None:
         
     Returns:
         None. Prints encryption status and writes encrypted message to file.
+        
+    Raises:
+        RuntimeError: If shared key computation fails.
+        FileNotFoundError: If secret message file doesn't exist.
+        PermissionError: If cannot read/write files.
     """
+    logger.info(f"Encrypting message from {party} to {other_party}")
+    
     # Compute shared secret key
     secure_key = get_shared_key_for_party(party, other_party)
     if secure_key is None:
-        return
+        logger.error(f"Failed to compute shared key - check that {other_party}'s public key exists")
+        raise RuntimeError(f"Cannot encrypt: {other_party}'s public key not available")
     
     # Read secret message from file
-    if not path.exists(SECRET_MESSAGE_FILE):
-        print(f"Secret message file not found: {SECRET_MESSAGE_FILE}")
-        return
-    
-    with open(SECRET_MESSAGE_FILE, "r") as file:
-        secret_message = file.read()
+    try:
+        logger.debug(f"Reading secret message from {SECRET_MESSAGE_FILE}")
+        with open(SECRET_MESSAGE_FILE, "r") as file:
+            secret_message = file.read()
+        
+        if not secret_message:
+            logger.warning("Secret message file is empty")
+    except FileNotFoundError:
+        logger.error(f"Secret message file not found: {SECRET_MESSAGE_FILE}")
+        raise FileNotFoundError(f"Secret message file not found: {SECRET_MESSAGE_FILE}")
+    except PermissionError:
+        logger.error(f"Permission denied reading: {SECRET_MESSAGE_FILE}")
+        raise PermissionError(f"Cannot read secret message file: {SECRET_MESSAGE_FILE}")
 
     
     otp_key = get_stretched_key(secure_key, len(secret_message))
@@ -53,5 +71,14 @@ def encrypt_message(party, other_party) -> None:
     print(f"Encrypted message: {encrypted_message.encode('unicode_escape')}")
     
     # Save encrypted message to file
-    with open(ENCRYPTED_MESSAGE_FILE, "w") as file:
-        file.write(encrypted_message)
+    try:
+        logger.debug(f"Writing encrypted message to {ENCRYPTED_MESSAGE_FILE}")
+        with open(ENCRYPTED_MESSAGE_FILE, "w") as file:
+            file.write(encrypted_message)
+        logger.info("Encryption completed successfully")
+    except PermissionError:
+        logger.error(f"Permission denied writing to: {ENCRYPTED_MESSAGE_FILE}")
+        raise PermissionError(f"Cannot write encrypted message file: {ENCRYPTED_MESSAGE_FILE}")
+    except OSError as e:
+        logger.error(f"OS error writing encrypted message: {e}")
+        raise OSError(f"Failed to write encrypted message: {e}")

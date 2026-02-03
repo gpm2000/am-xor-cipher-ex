@@ -26,17 +26,36 @@ This module provides functions for:
 """
 
 import hashlib
+import logging
 from os import path
 from config import DATA_DIR
 from xor_utils import xor_cipher
 from json_utils import get_json_value, save_json
 
+logger = logging.getLogger(__name__)
+
 
 def load_dh_params():
-    """Load Diffie-Hellman parameters from configuration file."""
+    """Load Diffie-Hellman parameters from configuration file.
+    
+    Returns:
+        Tuple of (generator, prime) integers.
+        
+    Raises:
+        ValueError: If parameters are invalid (not positive integers, or generator >= prime).
+    """
     from config import DH_PARAMS_FILE
+    logger.debug("Loading Diffie-Hellman parameters")
     generator = get_json_value(DH_PARAMS_FILE, "generator")
     prime = get_json_value(DH_PARAMS_FILE, "prime")
+    
+    # Validate parameters
+    if not isinstance(prime, int) or prime <= 1:
+        raise ValueError(f"Prime must be an integer > 1, got {prime}")
+    if not isinstance(generator, int) or generator <= 0 or generator >= prime:
+        raise ValueError(f"Generator must be an integer where 0 < g < prime, got {generator}")
+    
+    logger.info(f"Loaded DH params: generator={generator}, prime={prime}")
     return generator, prime
 
 def generate_and_publish_public_key(producer_id):
@@ -47,15 +66,25 @@ def generate_and_publish_public_key(producer_id):
         
     Returns:
         The generated public key as a string.
+        
+    Raises:
+        ValueError: If secret is invalid (not positive integer).
     """
     # Load DH parameters
+    logger.info(f"Generating public key for {producer_id}")
     generator, prime = load_dh_params()
     secret = get_json_value(path.join(DATA_DIR, f"{producer_id}.json"), "secret")
+    
+    # Validate secret
+    if not isinstance(secret, int) or secret <= 0:
+        raise ValueError(f"Secret must be a positive integer, got {secret}")
+    
     # public key for sharing = (G^secret) % P
     print(f"Calculating public key with Generator={generator}, Prime={prime}, secret={secret}")
     public_key = str(pow(generator, secret, prime))
     save_json(f"public_key{producer_id}.json", {"public_key": public_key})
     print(f"Published public key {public_key} to public_key{producer_id}.json")
+    logger.info(f"Published public key for {producer_id}")
     return public_key
 
 def get_shared_key_for_party(party, other_party):
@@ -66,7 +95,13 @@ def get_shared_key_for_party(party, other_party):
     then computes the shared secret that both parties will have.
     
     Returns the shared secret key (SHA256 hash) or None if public key not available.
+    
+    Raises:
+        ValueError: If party secret is invalid.
+        FileNotFoundError: If public key file doesn't exist.
     """
+    
+    logger.info(f"Computing shared key for {party} with {other_party}")
     
     # Load DH parameters
     generator, prime = load_dh_params()
@@ -74,9 +109,14 @@ def get_shared_key_for_party(party, other_party):
     # Load my secret
     party_secret = get_json_value(path.join(DATA_DIR, f"{party}.json"), "secret")
     
+    # Validate secret
+    if not isinstance(party_secret, int) or party_secret <= 0:
+        raise ValueError(f"Secret for {party} must be a positive integer, got {party_secret}")
+    
     # Load other party's public key
     other_party_public_key_filepath = f".\\public_key{other_party}.json"
     if not path.exists(other_party_public_key_filepath):
+        logger.warning(f"Public key file from {other_party} not found: {other_party_public_key_filepath}")
         print(f"Public key file from {other_party} was not published yet {other_party_public_key_filepath}")
         return None
     
@@ -84,6 +124,7 @@ def get_shared_key_for_party(party, other_party):
     
     # Compute shared secret
     shared_secure_key = compute_secured_shared_key(generator, prime, party_secret, other_party_public_key)
+    logger.info(f"Successfully computed shared key for {party}")
     return shared_secure_key
 
 def compute_secured_shared_key(generator, prime, secret, public_key):
