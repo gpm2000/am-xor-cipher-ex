@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -21,6 +22,17 @@ jobs:
     
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+    
+    - name: Run pylint on src
+      run: pylint src/
+    
+    - name: Run pylint on tests
+      run: pylint tests/
     
     - name: Run tests
       run: python tests/test.py
