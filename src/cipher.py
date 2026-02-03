@@ -15,7 +15,7 @@ derived from Diffie-Hellman key exchange combined with XOR cipher encryption.
     - Validate message integrity and authenticity
 """
 
-# pylint: disable=import-error
+# pylint: disable=import-error,duplicate-code
 
 import logging
 

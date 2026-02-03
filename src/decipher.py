@@ -15,7 +15,7 @@ derived from Diffie-Hellman key exchange combined with XOR cipher decryption.
     - Implement rate limiting to prevent brute force attacks
 """
 
-# pylint: disable=import-error
+# pylint: disable=import-error,duplicate-code
 
 import logging
 

@@ -25,21 +25,21 @@ def get_json_value(filepath, param):
         ValueError: If JSON is malformed or cannot be parsed.
     """
     try:
-        logger.debug(f"Reading '{param}' from {filepath}")
-        with open(filepath, 'r') as f:
+        logger.debug("Reading '%s' from %s", param, filepath)
+        with open(filepath, 'r', encoding='utf-8') as f:
             value = json.load(f)
             if param not in value:
                 raise KeyError(f"Missing key '{param}' in {filepath}")
             return value[param]
-    except FileNotFoundError:
-        logger.error(f"File not found: {filepath}")
-        raise FileNotFoundError(f"Configuration file not found: {filepath}")
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in {filepath}: {e}")
-        raise ValueError(f"Invalid JSON format in {filepath}: {e}")
-    except PermissionError:
-        logger.error(f"Permission denied: {filepath}")
-        raise PermissionError(f"Cannot read file (permission denied): {filepath}")
+    except FileNotFoundError as exc:
+        logger.error("File not found: %s", filepath)
+        raise FileNotFoundError(f"Configuration file not found: {filepath}") from exc
+    except json.JSONDecodeError as exc:
+        logger.error("Invalid JSON in %s: %s", filepath, exc)
+        raise ValueError(f"Invalid JSON format in {filepath}: {exc}") from exc
+    except PermissionError as exc:
+        logger.error("Permission denied: %s", filepath)
+        raise PermissionError(f"Cannot read file (permission denied): {filepath}") from exc
 
 def save_json(filepath, data):
     """Save data to a JSON file with pretty formatting.
@@ -56,15 +56,15 @@ def save_json(filepath, data):
         PermissionError: If cannot write to the file.
     """
     try:
-        logger.debug(f"Saving data to {filepath}")
-        with open(filepath, 'w') as f:
+        logger.debug("Saving data to %s", filepath)
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4)
-    except TypeError as e:
-        logger.error(f"Data not JSON-serializable: {e}")
-        raise TypeError(f"Cannot serialize data to JSON: {e}")
-    except PermissionError:
-        logger.error(f"Permission denied writing to: {filepath}")
-        raise PermissionError(f"Cannot write file (permission denied): {filepath}")
-    except OSError as e:
-        logger.error(f"OS error writing to {filepath}: {e}")
-        raise OSError(f"Failed to write file {filepath}: {e}")
+    except TypeError as exc:
+        logger.error("Data not JSON-serializable: %s", exc)
+        raise TypeError(f"Cannot serialize data to JSON: {exc}") from exc
+    except PermissionError as exc:
+        logger.error("Permission denied writing to: %s", filepath)
+        raise PermissionError(f"Cannot write file (permission denied): {filepath}") from exc
+    except OSError as exc:
+        logger.error("OS error writing to %s: %s", filepath, exc)
+        raise OSError(f"Failed to write file {filepath}: {exc}") from exc

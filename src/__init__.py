@@ -27,6 +27,4 @@ __all__ = [
     "xor_utils",
     "cipher",
     "decipher",
-    "generate_key_martin",
-    "generate_key_whitfield",
 ]
