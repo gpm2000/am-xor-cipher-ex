@@ -206,3 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .idea
+encrypted_message.txt
+public_keyMartin.json
+public_keyWhitfield.json
