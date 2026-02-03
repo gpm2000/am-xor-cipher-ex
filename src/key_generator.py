@@ -90,8 +90,9 @@ def generate_and_publish_public_key(producer_id):
         f"Prime={prime}, secret={secret}"
     )
     public_key = str(pow(generator, secret, prime))
-    save_json(f"public_key{producer_id}.json", {"public_key": public_key})
-    print(f"Published public key {public_key} to public_key{producer_id}.json")
+    public_key_file = path.join(DATA_DIR, f"public_key{producer_id}.json")
+    save_json(public_key_file, {"public_key": public_key})
+    print(f"Published public key {public_key} to {public_key_file}")
     logger.info("Published public key for %s", producer_id)
     return public_key
 
@@ -124,7 +125,9 @@ def get_shared_key_for_party(party, other_party):
         )
 
     # Load other party's public key
-    other_party_public_key_filepath = f".\\public_key{other_party}.json"
+    other_party_public_key_filepath = path.join(
+        DATA_DIR, f"public_key{other_party}.json"
+    )
     if not path.exists(other_party_public_key_filepath):
         logger.warning(
             "Public key file from %s not found: %s",
