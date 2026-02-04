@@ -1,325 +1,110 @@
 # XOR Cipher with Diffie-Hellman Key Exchange
 
-A demonstration of secure message encryption using XOR cipher combined with Diffie-Hellman (DH) key exchange protocol. This project implements end-to-end encrypted communication between two parties who establish a shared secret key without directly sharing it.
+A demonstration of secure message encryption using XOR cipher with Diffie-Hellman (DH) key exchange using One-Time Pad Security key. Two parties establish a shared secret without directly transmitting it.
 
-## Overview
-
-This project demonstrates cryptographic principles by combining two key techniques:
-
-1. **Diffie-Hellman Key Exchange**: Allows two parties to establish a shared secret over an insecure channel without directly transmitting the secret.
-2. **XOR Cipher with One-Time Pad**: Uses the shared secret to encrypt messages using XOR operations, with key stretching for one-time pad encryption.
-
-## Assumptions and Scope
-
-⚠️ **CRITICAL ASSUMPTIONS - READ THIS FIRST:**
-
-This project makes the following assumptions that **DO NOT reflect production requirements**:
-
-### Secrets in This Project
-- **ASSUMPTION**: Secrets are stored in plaintext JSON files (`Martin.json`, `Whitfield.json`) with hardcoded values (e.g., `13`, `7`)
-- **REALITY**: In production, secrets must NEVER be hardcoded or stored in files
-- **PRODUCTION REQUIREMENT**: Use dedicated secret vaults:
-  - ☁️ Cloud vaults: Azure Key Vault, AWS Secrets Manager, Google Cloud KMS
-  - 🔐 On-premises: HashiCorp Vault, CyberArk, Thales Luna HSM
-  - 🛡️ Hardware: HSMs (Hardware Security Modules) for critical keys
-
-### Test Data Parameters
-- **ASSUMPTION**: Small DH parameters (generator=2, prime=59) for demonstration
-- **REALITY**: These parameters provide NO real security (256-bit equivalent = only 7 bits of security!)
-- **PRODUCTION REQUIREMENT**: Use RFC 3526 parameters (at least 2048-bit primes)
-
-### No Authentication or Validation
-- **ASSUMPTION**: Public keys are used without verification (vulnerable to MITM attacks)
-- **PRODUCTION REQUIREMENT**: Implement public key infrastructure (PKI) with digital signatures
-
-### Plaintext Storage
-- **ASSUMPTION**: Encrypted messages are stored in plaintext files
-- **PRODUCTION REQUIREMENT**: Implement access controls, encryption at rest, and audit logging
-
-### Educational Codebase
-- **ASSUMPTION**: Simple Python implementation for clarity
-- **PRODUCTION REQUIREMENT**: Use battle-tested libraries (`cryptography`, `PyCryptodome`)
-
-## Features
-
-- ✅ Secure key exchange using Diffie-Hellman protocol
-- ✅ Message encryption and decryption using XOR cipher
-- ✅ Optimized key stretching for varying message lengths
-- ✅ JSON-based configuration and key storage
-- ✅ Comprehensive test suite
-- ✅ Clean, documented codebase
-
-## Project Structure
-
-```
-am-xor-cipher-ex/
-├── src/
-│   ├── cipher.py              # Message encryption module
-│   ├── decipher.py            # Message decryption module
-│   ├── key_generator.py       # DH key exchange and key generation
-│   ├── xor_utils.py           # Optimized XOR cipher implementation
-│   ├── json_utils.py          # JSON file utilities
-│   ├── config.py              # Configuration constants
-│   └── __init__.py            # Package initializer
-├── tests/
-│   └── test.py                # Test suite
-├── data/
-│   ├── dh_params.json         # Diffie-Hellman parameters
-│   ├── secret_message.txt     # Message to encrypt
-│   ├── Martin.json            # Martin's secret
-│   └── Whitfield.json         # Whitfield's secret
-├── encrypted_message.txt      # Output encrypted message
-└── README.md                  # This file
-```
-
-## Usage
-
-### Understanding the Example Parties
-
-This project uses **Martin** and **Whitfield** as example parties to demonstrate secure communication. These are placeholder names:
-
-- **Martin** = Any sender who wants to encrypt a message
-- **Whitfield** = Any recipient who wants to decrypt a message
-
-You can replace these with any party names or identifiers (e.g., "Alice" and "Bob", "Server" and "Client", or "User1" and "User2").
-
-**Important**: Each party must have their own secret value stored in a JSON file:
-- `data/Martin.json` contains Martin's private secret
-- `data/Whitfield.json` contains Whitfield's private secret
-
-These secrets are never transmitted over the network—only the publicly derived keys are shared.
-
-⚠️ **IMPORTANT SECURITY NOTE - EXAMPLE SECRETS ONLY:**
-- The secrets in this project (e.g., `13` and `7` in `Martin.json` and `Whitfield.json`) are **hardcoded examples for demonstration purposes only**
-- **DO NOT use this approach in production!**
-- In production environments:
-  - Store secrets in secure vaults (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault, etc.)
-  - Use hardware security modules (HSMs) for key generation and storage
-  - Never store secrets in plaintext JSON files in the repository
-  - Never commit secret values to version control
-  - Implement key rotation policies
-  - Use environment variables or secure configuration systems
-  - Implement access controls and audit logging for secret access
-
-### Quick Start
-
-Run the complete encryption and decryption test with the example parties:
+## Quick Start
 
 ```bash
 python tests/test.py
 ```
 
-This will:
-1. Generate public keys for both parties (Martin and Whitfield)
-2. Encrypt a secret message from Martin to Whitfield
-3. Decrypt the message as Whitfield
+This runs a complete DH key exchange and encryption/decryption test between Whitfield and Martin.
 
-### Encrypting a Message
+## Usage
 
-To encrypt a message **as Martin** sending **to Whitfield**:
+### Encrypt a Message
 
 ```python
+from key_generator import generate_and_publish_public_key
 from cipher import encrypt_message
 
-# Encrypt message from Martin to Whitfield
+# Generate public keys
+generate_and_publish_public_key("Martin")
+generate_and_publish_public_key("Whitfield")
+
+# Encrypt
 encrypt_message("Martin", "Whitfield")
 ```
 
-The encrypted message will be saved to `encrypted_message.txt`.
-
-**To use with different parties**:
-```python
-# Encrypt message from Alice to Bob
-encrypt_message("Alice", "Bob")
-
-# Encrypt message from Server to Client
-encrypt_message("Server", "Client")
-```
-
-Before encrypting, ensure:
-1. Both parties have had their public keys generated
-2. Both parties have secret values in `data/{PartyName}.json`
-3. The message to encrypt is in `data/secret_message.txt`
-
-### Decrypting a Message
-
-To decrypt a message **as Whitfield** from **Martin**:
+### Decrypt a Message
 
 ```python
 from decipher import decrypt_message
 
-# Decrypt message from Martin to Whitfield
+# Decrypt
 decrypt_message("Whitfield", "Martin")
 ```
 
-**To use with different parties**:
-```python
-# Decrypt message from Alice to Bob (as Bob)
-decrypt_message("Bob", "Alice")
+## Project Structure
 
-# Decrypt message from Server to Client (as Client)
-decrypt_message("Client", "Server")
+```
+src/
+├── cipher.py          # Encryption
+├── decipher.py        # Decryption
+├── key_generator.py   # DH key exchange
+├── xor_utils.py       # XOR operations
+├── json_utils.py      # File I/O
+├── config.py          # Configuration
+└── __init__.py        # Package exports
+
+tests/
+└── test.py            # Test suite
+
+data/
+├── dh_params.json     # DH parameters
+├── Martin.json        # Martin's secret
+├── Whitfield.json     # Whitfield's secret
+└── secret_message.txt # Message to encrypt
 ```
 
-### Key Generation
+## ⚠️ Important Security Notes
 
-Before any encryption/decryption, both parties must generate their public keys:
+This is an **educational demonstration only**. DO NOT use in production.
 
-```python
-from key_generator import generate_and_publish_public_key
+### Example Secrets
+- Secrets (e.g., `13`, `7`) are **hardcoded examples** in external files for testing
+- **In production**: Store secrets in Azure Key Vault, AWS Secrets Manager, or similar vault services
+- Never store secrets in JSON files or commit to version control
 
-# Generate and publish public keys
-generate_and_publish_public_key("Martin")
-generate_and_publish_public_key("Whitfield")
+### Small DH Parameters
+- Parameters (generator=2, prime=59) are for demonstration
+- **In production**: Use RFC 3526 parameters (minimum 2048-bit primes)
+
+## Technologies
+
+- **Python 3.9+**: Standard library only (hashlib, json, os, sys, logging)
+- **No external dependencies**: Clean, self-contained implementation
+- **Code Quality**: pylint 10.00/10, mypy strict mode compatible
+
+## CI/CD
+
+GitHub Actions workflow (`.github/workflows/ci.yml`):
+- Runs on pull requests to `main`
+- Tests on Python 3.9, 3.11, 3.13
+- Includes pylint code quality checks
+
+To run manually: Go to Actions tab → CI → Run workflow
+
+## Development
+
+Install dev dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-**For custom parties**:
-```python
-# Generate keys for any parties
-generate_and_publish_public_key("Alice")
-generate_and_publish_public_key("Bob")
+Run tests:
+```bash
+python tests/test.py
 ```
 
-This creates:
-- `public_keyMartin.json` and `public_keyWhitfield.json` (or your party names)
-- These files can be safely shared over any channel
-
-### Complete Workflow Example
-
-```python
-from key_generator import generate_and_publish_public_key
-from cipher import encrypt_message
-from decipher import decrypt_message
-
-# Step 1: Both parties generate and publish their public keys
-generate_and_publish_public_key("Alice")
-generate_and_publish_public_key("Bob")
-
-# Step 2: Alice encrypts a message for Bob
-encrypt_message("Alice", "Bob")
-
-# Step 3: Bob decrypts the message from Alice
-decrypt_message("Bob", "Alice")
-```
-
-## Configuration
-
-All configuration is centralized in `src/config.py`:
-
-- **DH_PARAMS_FILE**: Path to Diffie-Hellman parameters (generator and prime)
-- **DATA_DIR**: Directory for storing secrets and generated keys
-- **ENCRYPTED_MESSAGE_FILE**: Output file for encrypted messages
-- **SECRET_MESSAGE_FILE**: Input file for messages to encrypt
-
-### DH Parameters File
-
-Example DH parameters file (`data/dh_params.json`):
-```json
-{
-    "generator": 2,
-    "prime": 59
-}
-```
-
-⚠️ **EXAMPLE PARAMETERS ONLY:**
-- The parameters shown (generator=2, prime=59) are for demonstration purposes
-- These values are **too small for any real security**
-- **DO NOT use these in production**
-
-**What these mean:**
-- **generator** (G): The base number used in modular exponentiation
-- **prime** (P): A large prime number used as the modulus
-  - In this example: 59 (small for demonstration)
-  - In production: Use at least 2048-bit primes
-
-**Production Requirements:**
-- Always use standardized, tested DH parameters from RFC 3526 or similar standards
-- Store parameters securely (they don't need to be secret, but integrity must be protected)
-- Verify parameters haven't been tampered with using digital signatures
-- Consider using Elliptic Curve Diffie-Hellman (ECDH) in modern systems (more efficient)
-
-**DH Parameters commonly used:**
-| Bits | Prime Source | Notes |
-|------|--------------|-------|
-| 1024 | RFC 2409 | Deprecated, minimum for legacy systems |
-| 2048 | RFC 3526 | Minimum recommended for modern use |
-| 3072 | RFC 3526 | Strong security, recommended |
-| 4096 | RFC 3526 | Very strong security |
-
-### Party Secret Files
-
-Each party has their own secret stored in `data/{PartyName}.json`:
-```json
-{
-    "secret": 13
-}
-```
-
-⚠️ **EXAMPLE ONLY - DO NOT USE IN PRODUCTION:**
-- The hardcoded secret value `13` is an example for testing only
-- In production, secrets must be:
-  - Generated using cryptographically secure random number generation (e.g., `secrets.randbits(2048)`)
-  - Stored in secure key vaults, NOT in JSON files
-  - Never hardcoded or committed to version control
-  - Accessed only when needed and never logged or displayed
-  - Rotated periodically according to security policies
-
-**Why this matters:**
-- The secret `13` is Martin's private value (never shared)
-- It's used to compute: `public_key = 2^13 % 59 = 50`
-- In production, use random large integers (e.g., 1024+ bits)
-- Use Azure Key Vault, AWS Secrets Manager, or similar services
-
-### Message Files
-
-- **SECRET_MESSAGE_FILE** (`data/secret_message.txt`): Contains the message to encrypt
-  - Plain text format
-  - Can be any ASCII message
-  
-- **ENCRYPTED_MESSAGE_FILE** (`encrypted_message.txt`): Output of encryption
-  - Contains the XOR-encrypted ciphertext
-  - Binary data, typically saved as text with escape sequences
-
-## Best Practices
-
-### Security Considerations
-
-⚠️ **Note**: This is a demonstration project. For production use:
-
-1. **Secure Secret Storage (Critical!)**
-   - **DO NOT store secrets in JSON files, config files, or source code**
-   - Use dedicated key management services:
-     - Azure Key Vault (Azure)
-     - AWS Secrets Manager (AWS)
-     - Google Cloud Key Management Service (GCP)
-     - HashiCorp Vault (on-premises or cloud)
-     - Hardware Security Modules (HSMs)
-   - Never commit secrets to version control
-   - Implement strict access controls and audit logging
-
-2. **Use Established Cryptography Libraries**: Replace custom implementations with battle-tested libraries like `cryptography` or `PyCryptodome`.
-
-3. **Larger Prime Numbers**: Use sufficiently large primes (at least 2048 bits for DH in production).
-
-4. **Secure Random Generation**: Use `secrets` or `os.urandom()` for generating random values, not `random` module.
-
-5. **Authenticated Encryption**: Combine encryption with authentication (e.g., HMAC or AEAD ciphers) to detect tampering.
-
-6. **Transport Security**: Use TLS/SSL when transmitting public keys or encrypted messages over networks.
 
 ### Code Quality
 
-1. **Type Hints**: The codebase includes proper type hints for better IDE support and runtime safety.
-
-2. **Docstrings**: All functions include comprehensive docstrings with parameter and return documentation.
-
-3. **Modular Design**: Separate concerns into distinct modules (key generation, encryption, decryption, utilities).
-
-4. **Optimization**: 
+1. **Optimization**: 
    - XOR cipher uses `bytearray` for efficient in-place operations
    - Key stretching uses list accumulation instead of string concatenation (O(n) vs O(n²))
 
-5. **Testing**: Comprehensive test suite validates the complete workflow.
+2. **Testing**: Comprehensive test suite validates the complete workflow.
 
 ### Performance Tips
 
@@ -351,7 +136,7 @@ Handles all key generation and DH protocol logic.
 Key functions:
 - `load_dh_params()`: Load DH parameters
 - `generate_and_publish_public_key(producer_id)`: Generate public key
-- `get_shared_key_for_party(party, other_party)`: Compute shared secret
+- `get_shared_key_for_party(party, other_party)`: Returns shared secret
 - `compute_secured_shared_key(generator, prime, secret, public_key)`: Compute DH shared secret
 - `get_stretched_key(shared_key, target_length)`: Stretch key for one-time pad
 
@@ -413,25 +198,9 @@ import json       # For JSON file operations
 from os import path  # For file path operations
 ```
 
-### Why No External Dependencies?
-
-✅ **Advantages:**
-- No dependency management needed
-- No security vulnerabilities from third-party packages
-- Lightweight and portable
-- Educational clarity (shows core algorithms)
-
-⚠️ **Trade-offs:**
-- Limited to educational demonstrations
-- Production systems should use `cryptography` or `PyCryptodome` for:
-  - Hardware acceleration
-  - Additional algorithms (AES, ECDH, etc.)
-  - Authenticated encryption
-  - Secure random generation
-
 ### Dependencies
 
-- **Python 3.7+** (uses f-strings and modern Python features)
+- **Python 3.9+** (uses f-strings and modern Python features)
 - **No external packages required** (uses only Python standard library)
 
 ## Understanding the Protocol
@@ -556,9 +325,9 @@ Decrypted message: Top Secret Information
 
 ```bash
 # 1. Create party secret files (EXAMPLE ONLY - DO NOT DO THIS IN PRODUCTION)
-echo '{"secret": 42}' > data/Alice.json
-echo '{"secret": 99}' > data/Bob.json
-echo 'Hello Bob, this is Alice!' > data/secret_message.txt
+echo '{"secret": 7}' > data/Martin.json
+echo '{"secret": 13}' > data/Whitfield.json
+echo 'Hello Whitfield, this is Martin!' > data/secret_message.txt
 
 # 2. Run in Python
 python3 << 'EOF'
@@ -567,35 +336,17 @@ from cipher import encrypt_message
 from decipher import decrypt_message
 
 # Generate public keys
-generate_and_publish_public_key("Alice")
-generate_and_publish_public_key("Bob")
+generate_and_publish_public_key("Martin")
+generate_and_publish_public_key("Whitfield")
 
-# Alice encrypts for Bob
-encrypt_message("Alice", "Bob")
+# Martin encrypts for Whitfield
+encrypt_message("Martin", "Whitfield")
 
-# Bob decrypts from Alice
-decrypt_message("Bob", "Alice")
+# Whitfield decrypts from Martin
+decrypt_message("Whitfield", "Martin")
 EOF
 ```
 
-**Production Alternative:**
-```python
-import os
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-
-# Retrieve secrets from Azure Key Vault instead
-credential = DefaultAzureCredential()
-vault_url = "https://<your-vault>.vault.azure.net/"
-client = SecretClient(vault_url=vault_url, credential=credential)
-
-# Load secrets securely
-alice_secret = client.get_secret("alice-dh-secret").value
-bob_secret = client.get_secret("bob-dh-secret").value
-
-# Use secrets for encryption/decryption
-# Never store secrets in files or environment variables
-```
 
 ## Testing
 
@@ -655,128 +406,6 @@ Decrypted message: Top Secret Informatnon
 Exit Code: 0  ← All tests passed!
 ```
 
-## Learning Resources
-
-This project demonstrates several important cryptographic concepts:
-
-1. **Key Exchange Protocols**: How to establish shared secrets over insecure channels
-2. **Symmetric Encryption**: XOR cipher principles and limitations
-3. **Key Derivation**: Stretching short secrets into longer keys
-4. **Hashing**: Using SHA256 for key derivation and storage
-
-### Comparing This Implementation vs Production Code
-
-| Aspect | This Project | Production Code |
-|--------|--------------|----------        |
-| **Key Exchange** | Diffie-Hellman (DH) | ECDH (Elliptic Curve DH) |
-| **Encryption** | XOR cipher | AES-256-GCM |
-| **Authentication** | None | HMAC or authenticated encryption |
-| **Key Size** | 59-bit primes | 256-bit keys (2048+ bit DH) |
-| **Implementation** | Custom Python | `cryptography` library |
-| **Random Generation** | Hardcoded values | `secrets.randbits()` |
-| **Security Proof** | Educational | NIST approved |
-| **Performance** | Slow (for demo) | Hardware accelerated |
-| **Vulnerability to MITM** | Yes | Mitigated with signatures/PKI |
-
-### Understanding the Trade-offs
-
-**Why this project uses simple algorithms:**
-- 🎓 Easier to understand the concepts
-- 📖 Shows the actual math and logic
-- 🔧 Demonstrates complete control over the process
-
-**Why production uses complex algorithms:**
-- 🛡️ Protection against known attacks
-- ⚡ Hardware acceleration and optimization
-- 🔐 Proven security properties
-- 🌍 Standards compliance (NIST, FIPS, etc.)
-
-## Limitations and Disclaimer
-
-⚠️ **This is a demonstration project for educational purposes only.**
-
-### Known Limitations
-
-| Limitation | Why | Production Solution |
-|-----------|-----|---------------------|
-| **Hardcoded secrets in JSON files** | Testing/demo purposes | Store in vaults (Azure Key Vault, AWS Secrets Manager, HSM) |
-| Small prime numbers (59-bit) | Demonstration purposes | Use 2048+ bit primes (RFC 3526) |
-| No message authentication | Can't detect tampering | Add HMAC or use AEAD ciphers |
-| No protection against MITM | Public keys could be spoofed | Use digital signatures or PKI |
-| Custom XOR implementation | Educational, not optimized | Use `cryptography` library (AES-GCM) |
-| Synchronous file operations | Blocking I/O | Use async/await with `aiofiles` |
-| No key rotation | Static shared secret | Implement periodic key agreement |
-
-### When to Use This Project
-
-✅ **Good for:**
-- Learning cryptographic concepts
-- Understanding Diffie-Hellman protocol
-- Understanding XOR cipher and one-time pads
-- Educational demonstrations
-- Code examples for learning
-
-❌ **Not suitable for:**
-- Production systems with real data
-- Protecting sensitive information
-- High-security applications
-- Network communication (no TLS/SSL)
-- Long-term data storage
-
-### Production-Ready Alternatives
-
-For real-world applications, use established cryptography libraries with proper secret management:
-
-**Python with Proper Secret Management:**
-```python
-import os
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import x25519
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-
-# 1. Retrieve secrets from Azure Key Vault (NOT from files)
-credential = DefaultAzureCredential()
-vault_url = "https://<your-vault>.vault.azure.net/"
-client = SecretClient(vault_url=vault_url, credential=credential)
-
-alice_secret_b64 = client.get_secret("alice-private-key").value
-bob_public_b64 = client.get_secret("bob-public-key").value
-
-# 2. Use modern key exchange (X25519 instead of DH)
-alice_private = x25519.X25519PrivateKey.from_private_bytes(bytes.fromhex(alice_secret_b64))
-shared_secret = alice_private.exchange(x25519.X25519PublicKey(bytes.fromhex(bob_public_b64)))
-
-# 3. Use authenticated encryption (ChaCha20-Poly1305)
-cipher = ChaCha20Poly1305(shared_secret)
-nonce = os.urandom(12)
-ciphertext = cipher.encrypt(nonce, b"Secret message", None)
-
-# 4. Transmit over TLS/SSL
-# 5. Log to secure audit trails only
-```
-
-**Recommended Libraries:**
-- `cryptography` - Modern, well-maintained, FIPS 140-2 compatible
-- `PyCryptodome` - Comprehensive crypto algorithms
-- `nacl` (PyNaCl) - High-level, secure-by-default crypto
-
-**Recommended Vault Solutions:**
-
-| Platform | Service | Use Case |
-|----------|---------|----------|
-| Azure | Azure Key Vault | Cloud-native Azure applications |
-| AWS | AWS Secrets Manager | Cloud-native AWS applications |
-| Google Cloud | Cloud KMS | Cloud-native GCP applications |
-| On-Premises | HashiCorp Vault | Self-managed infrastructure |
-| Hardware | Thales Luna, YubiKey | Highest security requirements |
-
-**Languages:**
-- JavaScript: `tweetnacl-js` or `libsodium.js` + AWS SDK / Azure SDK
-- Rust: `ring` or `sodiumoxide` + cloud SDKs
-- Go: Built-in `crypto` package + cloud SDKs
-- Java: Bouncy Castle + cloud SDKs
 
 ## License
 
