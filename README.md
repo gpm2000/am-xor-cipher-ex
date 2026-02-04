@@ -1,6 +1,6 @@
 # XOR Cipher with Diffie-Hellman Key Exchange
 
-A demonstration of secure message encryption using XOR cipher with Diffie-Hellman (DH) key exchange. Two parties establish a shared secret without directly transmitting it.
+A demonstration of secure message encryption using XOR cipher with Diffie-Hellman (DH) key exchange using One-Time Pad Security key. Two parties establish a shared secret without directly transmitting it.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ A demonstration of secure message encryption using XOR cipher with Diffie-Hellma
 python tests/test.py
 ```
 
-This runs a complete DH key exchange and encryption/decryption test between Martin and Whitfield.
+This runs a complete DH key exchange and encryption/decryption test between Whitfield and Martin.
 
 ## Usage
 
@@ -62,7 +62,7 @@ data/
 This is an **educational demonstration only**. DO NOT use in production.
 
 ### Example Secrets
-- Secrets (e.g., `13`, `7`) are **hardcoded examples** for testing
+- Secrets (e.g., `13`, `7`) are **hardcoded examples** in external files for testing
 - **In production**: Store secrets in Azure Key Vault, AWS Secrets Manager, or similar vault services
 - Never store secrets in JSON files or commit to version control
 
@@ -197,22 +197,6 @@ import hashlib    # For SHA256 hashing
 import json       # For JSON file operations
 from os import path  # For file path operations
 ```
-
-### Why No External Dependencies?
-
-✅ **Advantages:**
-- No dependency management needed
-- No security vulnerabilities from third-party packages
-- Lightweight and portable
-- Educational clarity (shows core algorithms)
-
-⚠️ **Trade-offs:**
-- Limited to educational demonstrations
-- Production systems should use `cryptography` or `PyCryptodome` for:
-  - Hardware acceleration
-  - Additional algorithms (AES, ECDH, etc.)
-  - Authenticated encryption
-  - Secure random generation
 
 ### Dependencies
 
