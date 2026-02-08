@@ -72,9 +72,10 @@ This is an **educational demonstration only**. DO NOT use in production.
 
 ## Technologies
 
-- **Python 3.9+**: Standard library only (hashlib, json, os, sys, logging)
+- **Python 3.9+**: Standard library only (hashlib, json, os, sys, logging, base64, binascii)
 - **No external dependencies**: Clean, self-contained implementation
 - **Code Quality**: pylint 10.00/10, mypy strict mode compatible
+- **Binary-Safe Encoding**: Uses Base64 for storing encrypted data
 
 ## CI/CD
 
@@ -106,6 +107,27 @@ python tests/test.py
 
 2. **Testing**: Comprehensive test suite validates the complete workflow.
 
+### Encoding Strategy
+
+The implementation uses a multi-layer encoding approach to safely handle arbitrary binary data:
+
+1. **Message Input**: UTF-8 encoded text (supports Unicode characters like '…', '—', etc.)
+2. **XOR Operation**: Produces arbitrary binary data (bytes 0-255)
+3. **Base64 Encoding**: Converts binary to ASCII text for safe file storage
+4. **Storage**: Encrypted message stored as Base64 string in text file
+
+**Why Base64?**
+- XOR operations produce random bytes that aren't valid UTF-8
+- Attempting to store as UTF-8 text causes encoding errors
+- Base64 ensures binary data can be safely stored and retrieved
+- ASCII-only output prevents corruption during file operations
+
+**Encoding Flow:**
+```
+Plaintext (UTF-8) → bytes → XOR → binary bytes → Base64 → text file
+text file → Base64 decode → binary bytes → XOR → bytes → UTF-8 decode → Plaintext
+```
+
 ### Performance Tips
 
 1. **Key Stretching**: For long messages, consider caching stretched keys if encrypting/decrypting multiple messages with the same key.
@@ -123,12 +145,22 @@ Encrypts messages using Diffie-Hellman shared secret and XOR cipher.
 encrypt_message(party, other_party) -> None
 ```
 
+**Key Features:**
+- Supports full UTF-8 message content (including Unicode characters like curly quotes)
+- Converts messages to bytes and encodes as Base64 for safe file storage
+- XOR result stored as Base64 text, preventing encoding corruption
+
 ### decipher.py
 Decrypts messages using the same DH protocol.
 
 ```python
 decrypt_message(party, other_party) -> None
 ```
+
+**Key Features:**
+- Reads Base64-encoded encrypted data from file
+- Decodes Base64 to recover original XOR'd bytes
+- Decodes decrypted bytes as UTF-8 to restore original message
 
 ### key_generator.py
 Handles all key generation and DH protocol logic.
@@ -141,13 +173,18 @@ Key functions:
 - `get_stretched_key(shared_key, target_length)`: Stretch key for one-time pad
 
 ### xor_utils.py
-Implements the optimized XOR cipher.
+Implements the optimized XOR cipher with binary-safe encoding.
 
 ```python
-xor_cipher(text, key) -> str
+xor_cipher(text, key) -> bytes
 ```
 
-Performs XOR encryption/decryption. Since XOR is symmetric, the same function works for both operations.
+Performs XOR encryption/decryption. Returns bytes to safely handle arbitrary binary data produced by XOR operations. Since XOR is symmetric, the same function works for both operations.
+
+**Encoding Strategy:**
+- Uses `latin-1` encoding internally to preserve all byte values (0-255)
+- Enables safe handling of Unicode characters (UTF-8) in source messages
+- Returns raw bytes that can be safely Base64-encoded for storage
 
 ### json_utils.py
 Provides JSON file utilities.
@@ -180,6 +217,12 @@ Provides JSON file utilities.
    - 256-bit output (64 hex characters)
    - Used for: Shared secret derivation and key stretching
 
+5. **Base64 Encoding**
+   - Binary-to-text encoding scheme (RFC 4648)
+   - Safely stores arbitrary binary data as ASCII text
+   - Used for: Storing XOR cipher output in text files
+   - Prevents UTF-8 encoding errors when dealing with arbitrary bytes
+
 ### Python Standard Library Packages
 
 The project uses **only Python standard library** (no external dependencies):
@@ -190,11 +233,15 @@ The project uses **only Python standard library** (no external dependencies):
 | `json` | Data serialization | Store DH params, secrets, public keys |
 | `os` | Operating system interface | File path handling |
 | `sys` | System-specific parameters | Path manipulation |
+| `base64` | Binary-to-text encoding | Safely store encrypted binary data as text |
+| `binascii` | Binary/ASCII conversions | Error handling for Base64 operations |
+| `logging` | Logging framework | Diagnostic and debug logging |
 
 **Example imports:**
 ```python
 import hashlib    # For SHA256 hashing
 import json       # For JSON file operations
+import base64     # For Base64 encoding/decoding
 from os import path  # For file path operations
 ```
 
@@ -229,6 +276,30 @@ Message:  A     t     t     a     c     k
 Binary:   01000001 01110100 01110100 01100001 01100011 01101011
 Key:      10101010 11001100 10011001 11110000 10101010 11110011
 XOR:      11101011 10111000 11101101 10010001 11001001 10011000
+```
+
+#### UTF-8 and Unicode Support
+
+This implementation fully supports Unicode characters in messages:
+
+**Supported Characters:**
+- ✅ ASCII characters (a-z, A-Z, 0-9, etc.)
+- ✅ Unicode punctuation (curly quotes: ' ' " ", em dash: —, ellipsis: …)
+- ✅ International characters (é, ñ, 中, 日, etc.)
+- ✅ Emoji and special symbols (🔒, ✓, ⚠️)
+
+**Implementation Details:**
+1. Messages are first encoded as UTF-8 bytes (variable-length encoding)
+2. UTF-8 bytes are converted to `latin-1` string representation for XOR processing
+3. XOR produces arbitrary binary data (bytes 0-255)
+4. Binary result is Base64-encoded for safe text file storage
+5. During decryption, Base64 is decoded, XOR reversed, then decoded back to UTF-8
+
+**Example:**
+```
+Message: "world's" (with curly apostrophe U+2019)
+UTF-8 bytes: [77 6F 72 6C 64 E2 80 99 73]
+→ XOR with key → Binary bytes → Base64 encode → Safe storage
 ```
 
 #### One-Time Pad Security
@@ -290,11 +361,13 @@ Calculating public key with Generator=2, Prime=59, secret=7
 Published public key 10 to public_keyMartin.json
 Calculating secured common key with generator=2, prime=59, secret=7, public_key=50
 Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
-Encrypted message: b'2\\x0eEEc\\x03ZDW\\x15\\x10y_U]EU\\x04B\r_\\\\'
+Encrypted message: b"'\x12\x15\x11X\x03\x19ZW\x00TY_T\x12GJ\n@\rTW\x13AYWF\\QL..."
 Calculating secured common key with generator=2, prime=59, secret=13, public_key=10
 Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
-Decrypted message: Top Secret Information
+Decrypted message: As the leading provider of materials engineering solutions...
 ```
+
+**Note:** The encrypted message is displayed as bytes for debugging, but is actually stored as Base64 text in the `encrypted_message.txt` file.
 
 ### What Happened in This Example
 

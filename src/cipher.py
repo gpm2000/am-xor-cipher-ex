@@ -17,6 +17,7 @@ derived from Diffie-Hellman key exchange combined with XOR cipher encryption.
 
 # pylint: disable=import-error,duplicate-code
 
+import base64
 import logging
 
 from config import ENCRYPTED_MESSAGE_FILE, SECRET_MESSAGE_FILE
@@ -79,15 +80,19 @@ def encrypt_message(party, other_party) -> None:
         )
         raise PermissionError(error_message) from exc
 
-    otp_key = get_stretched_key(secure_key, len(secret_message))
-    encrypted_message = xor_cipher(secret_message, otp_key)
-    print(f"Encrypted message: {encrypted_message.encode('unicode_escape')}")
+    otp_key = get_stretched_key(secure_key, len(secret_message.encode('utf-8')))
+    # Convert UTF-8 bytes to latin-1 string for XOR processing
+    secret_message_latin1 = secret_message.encode('utf-8').decode('latin-1')
+    encrypted_bytes = xor_cipher(secret_message_latin1, otp_key)
+    print(f"Encrypted message: {encrypted_bytes[:50]}...")  # Show first 50 bytes
 
-    # Save encrypted message to file
+    # Save encrypted message to file as Base64 (binary-safe encoding)
     try:
         logger.debug("Writing encrypted message to %s", ENCRYPTED_MESSAGE_FILE)
+        # Encode encrypted bytes as Base64 for safe text file storage
+        encrypted_b64 = base64.b64encode(encrypted_bytes).decode('ascii')
         with open(ENCRYPTED_MESSAGE_FILE, "w", encoding="utf-8") as file:
-            file.write(encrypted_message)
+            file.write(encrypted_b64)
         logger.info("Encryption completed successfully")
     except PermissionError as exc:
         logger.error("Permission denied writing to: %s", ENCRYPTED_MESSAGE_FILE)
