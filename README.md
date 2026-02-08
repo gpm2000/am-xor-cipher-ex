@@ -409,4 +409,16 @@ Exit Code: 0  ← All tests passed!
 
 ## License
 
-This project is provided as-is for educational and demonstration purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### MIT License Summary
+- ✅ **Use commercially**: You can use this in commercial projects
+- ✅ **Modify**: You can modify the code
+- ✅ **Distribute**: You can distribute the code
+- ✅ **Use privately**: You can use it for private purposes
+- ⚠️ **Liability**: The software is provided "as-is" with no warranty
+- 📝 **Attribution**: Include a copy of the license and copyright notice when distributing
+
+**Copyright © 2026**
+
+For the full license text, see the [LICENSE](LICENSE) file in the root directory.
