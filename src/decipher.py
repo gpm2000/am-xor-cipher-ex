@@ -17,6 +17,8 @@ derived from Diffie-Hellman key exchange combined with XOR cipher decryption.
 
 # pylint: disable=import-error,duplicate-code
 
+import base64
+import binascii
 import logging
 
 from config import ENCRYPTED_MESSAGE_FILE
@@ -62,10 +64,17 @@ def decrypt_message(party, other_party) -> None:
     try:
         logger.debug("Reading encrypted message from %s", ENCRYPTED_MESSAGE_FILE)
         with open(ENCRYPTED_MESSAGE_FILE, "r", encoding="utf-8") as file:
-            encrypted_message = file.read()
+            encrypted_b64 = file.read()
 
-        if not encrypted_message:
+        if not encrypted_b64:
             logger.warning("Encrypted message file is empty")
+            raise ValueError("Encrypted message file is empty")
+
+        # Decode Base64 to get original encrypted bytes
+        encrypted_bytes = base64.b64decode(encrypted_b64)
+        # Convert bytes to string using latin-1 (preserves all byte values as characters)
+        encrypted_text = encrypted_bytes.decode('latin-1')
+
     except FileNotFoundError as exc:
         logger.error("Encrypted message file not found: %s", ENCRYPTED_MESSAGE_FILE)
         error_message = (
@@ -78,9 +87,27 @@ def decrypt_message(party, other_party) -> None:
             f"Cannot read encrypted message file: {ENCRYPTED_MESSAGE_FILE}"
         )
         raise PermissionError(error_message) from exc
+    except (ValueError, binascii.Error) as exc:
+        logger.error("Failed to decode Base64 encrypted message: %s", exc)
+        error_message = (
+            f"Invalid Base64 format in encrypted message file: {exc}"
+        )
+        raise ValueError(error_message) from exc
 
     # Decrypt message using XOR cipher with stretched key
-    otp_key = get_stretched_key(secure_key, len(encrypted_message))
-    decrypted_message = xor_cipher(encrypted_message, otp_key)
+    # Use byte length of encrypted data for key stretching
+    otp_key = get_stretched_key(secure_key, len(encrypted_bytes))
+    decrypted_bytes = xor_cipher(encrypted_text, otp_key)
+
+    # Decode decrypted bytes as UTF-8 to get plaintext
+    try:
+        decrypted_message = decrypted_bytes.decode('utf-8')
+    except UnicodeDecodeError as exc:
+        logger.error("Decrypted message is not valid UTF-8: %s", exc)
+        error_message = (
+            f"Decrypted data is not valid UTF-8. Key mismatch or corrupted data: {exc}"
+        )
+        raise ValueError(error_message) from exc
+
     print(f"Decrypted message: {decrypted_message}")
     logger.info("Decryption completed successfully")

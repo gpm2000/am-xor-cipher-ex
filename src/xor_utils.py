@@ -13,19 +13,19 @@ def xor_cipher(text, key):
     XOR cipher implementation.
 
     Encrypts or decrypts text using XOR operation with a given key.
-    The key is repeated cyclically to match the text length. Since XOR
-    is its own inverse, the same function works for both encryption and decryption.
+    Works with UTF-8 encoded text. For encryption, encodes text as UTF-8 bytes,
+    XORs with key, and returns binary result. For decryption, assumes binary
+    input (as string with latin-1 encoding), XORs with key, and returns binary.
     
     Args:
-        text: The plaintext string to encrypt or ciphertext to decrypt.
+        text: The plaintext string to encrypt or ciphertext string (latin-1 encoded binary).
         key: The encryption/decryption key string.
         
     Returns:
-        The encrypted or decrypted string.
+        Bytes object containing XORed binary data.
         
     Raises:
         ValueError: If key is empty or inputs are not strings.
-        UnicodeDecodeError: If XOR result cannot be decoded as UTF-8.
     """
     # Validate inputs
     if not isinstance(text, str):
@@ -36,29 +36,21 @@ def xor_cipher(text, key):
         raise ValueError("Encryption key cannot be empty")
     if not text:
         logger.warning("Empty text provided to xor_cipher")
-        return text
+        return b""
 
     key_length = len(key)
-    key_int = [ord(k) for k in key]  # Convert key to integers once
+    key_bytes = [ord(k) for k in key]  # Convert key to byte values
 
+    # Always use latin-1 for encoding/decoding to preserve all byte values (0-255)
+    # This is necessary because after XOR, we may have arbitrary byte values
     try:
-        text_int = bytearray(text, 'utf-8')  # Convert text to bytearray for mutability
+        text_bytes = bytearray(text.encode('latin-1'))
     except UnicodeEncodeError as exc:
-        logger.error("Failed to encode text as UTF-8: %s", exc)
-        raise ValueError(f"Text contains invalid characters: {exc}") from exc
+        logger.error("Failed to encode text as latin-1: %s", exc)
+        raise ValueError(f"Text contains characters outside latin-1 range: {exc}") from exc
 
     # Perform XOR operation
-    for index, _ in enumerate(text_int):
-        text_int[index] ^= key_int[index % key_length]  # XOR with the key
+    for index, _ in enumerate(text_bytes):
+        text_bytes[index] ^= key_bytes[index % key_length]  # XOR with the key
 
-    try:
-        return text_int.decode('utf-8')  # Convert back to string
-    except UnicodeDecodeError as exc:
-        logger.error("XOR result is not valid UTF-8: %s", exc)
-        error_message = (
-            "XOR cipher produced invalid UTF-8 bytes. This may indicate "
-            f"key mismatch or corrupted data: {exc}"
-        )
-        raise UnicodeDecodeError(
-            'utf-8', text_int, 0, len(text_int), error_message
-        ) from exc
+    return bytes(text_bytes)  # Return as bytes
