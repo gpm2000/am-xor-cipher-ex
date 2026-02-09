@@ -8,7 +8,7 @@ A demonstration of secure message encryption using XOR cipher with Diffie-Hellma
 python tests/test.py
 ```
 
-This runs a complete DH key exchange and encryption/decryption test between Whitfield and Martin.
+This runs a complete DH key exchange and encryption/decryption test between Whitfield Diffie and Martin Hellman.
 
 ## Usage
 
@@ -364,7 +364,7 @@ Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
 Encrypted message: b"'\x12\x15\x11X\x03\x19ZW\x00TY_T\x12GJ\n@\rTW\x13AYWF\\QL..."
 Calculating secured common key with generator=2, prime=59, secret=13, public_key=10
 Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
-Decrypted message: As the leading provider of materials engineering solutions...
+Decrypted message: As the leading provider of materials engineering solutions, we are enabling the world's most advanced technologies...
 ```
 
 **Note:** The encrypted message is displayed as bytes for debugging, but is actually stored as Base64 text in the `encrypted_message.txt` file.
@@ -472,10 +472,16 @@ Calculating public key with Generator=2, Prime=59, secret=7
 Published public key 10 to public_keyMartin.json
 Calculating secured common key with generator=2, prime=59, secret=7, public_key=50
 Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
-Encrypted message: b'2\x0eEEc\x03ZDW\x15\x10y_U]EU\x04B\r_\\'
+Encrypted message: b"'\x12\x15\x11X\x03\x19ZW\x00TY_T\x12GJ\n@\rTW\x13AYWF..."
 Calculating secured common key with generator=2, prime=59, secret=13, public_key=10
 Secure key: 44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a
-Decrypted message: Top Secret Informatnon
+Decrypted message: As the leading provider of materials engineering solutions, we are enabling 
+the world's most advanced technologies through continuous innovation and collaboration.
+In this mature AI era, our strategic PPACt playbook continues to drive critical improvements 
+across Power, Performance, Area-Cost, and Time-to-market.
+By scaling Gate-All-Around architectures and advanced packaging solutions, the industry is 
+overcoming traditional Moore's Law limitations to power the next generation of sustainable, 
+high-performance computing systems globally.
 Exit Code: 0  ← All tests passed!
 ```
 
