@@ -89,7 +89,7 @@ def generate_and_publish_public_key(producer_id):
         f"Calculating public key with Generator={generator}, "
         f"Prime={prime}, secret={secret}"
     )
-    public_key = str(pow(generator, secret, prime))
+    public_key = pow(generator, secret, prime)
     public_key_file = path.join(DATA_DIR, f"public_key{producer_id}.json")
     save_json(public_key_file, {"public_key": public_key})
     print(f"Published public key {public_key} to {public_key_file}")
