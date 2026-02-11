@@ -319,8 +319,8 @@ The project uses **key stretching** to create a one-time pad:
 
 **Example in this project:**
 - Shared secret: `44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a` (256 bits from SHA256)
-- Message: "Top Secret Information" (22 characters)
-- Stretched key: The 256-bit secret is hashed multiple times with a counter to create exactly 22 characters
+- Message: "As the leading provider of materials engineering solutions..." (544 characters)
+- Stretched key: The 256-bit secret is hashed multiple times with a counter to create exactly 544 characters
 - Result: Each message character XORed with the corresponding stretched key character
 
 #### Key Stretching Implementation
