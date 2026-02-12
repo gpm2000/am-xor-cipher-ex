@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from cipher import encrypt_message
 from decipher import decrypt_message
+from io_utils import cleanup_runtime_files
 from key_generator import generate_and_publish_public_key
 # pylint: enable=wrong-import-position, import-error
 
@@ -72,6 +73,11 @@ def main() -> int:
                      type(exc).__name__, exc, exc_info=True)
         print(f"\n❌ Test failed with unexpected error: {type(exc).__name__}: {exc}")
         return 1
+    finally:
+        try:
+            cleanup_runtime_files()
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.error("Cleanup failed: %s", exc)
 
 if __name__ == "__main__":
     EXIT_CODE = main()

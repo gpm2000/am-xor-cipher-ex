@@ -7,6 +7,9 @@ import base64
 import binascii
 import json
 import logging
+import os
+
+from config import DATA_DIR, ENCRYPTED_MESSAGE_FILE, PARTIES
 
 logger = logging.getLogger(__name__)
 
@@ -128,3 +131,24 @@ def write_base64_file(filepath, data):
     except OSError as exc:
         logger.error("OS error writing to %s: %s", filepath, exc)
         raise OSError(f"Failed to write file {filepath}: {exc}") from exc
+
+def cleanup_runtime_files():
+    """Remove generated runtime files to keep the workspace clean."""
+    generated_files = [ENCRYPTED_MESSAGE_FILE]
+    for party in PARTIES.values():
+        generated_files.append(os.path.join(DATA_DIR, f"public_key{party}.json"))
+
+    for filepath in generated_files:
+        if not os.path.exists(filepath):
+            continue
+        try:
+            logger.debug("Removing generated file: %s", filepath)
+            os.remove(filepath)
+        except PermissionError as exc:
+            logger.error("Permission denied deleting: %s", filepath)
+            raise PermissionError(
+                f"Cannot delete file (permission denied): {filepath}"
+            ) from exc
+        except OSError as exc:
+            logger.error("OS error deleting %s: %s", filepath, exc)
+            raise OSError(f"Failed to delete file {filepath}: {exc}") from exc

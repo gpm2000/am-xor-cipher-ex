@@ -98,6 +98,8 @@ Run tests:
 python tests/test.py
 ```
 
+Note: The test run cleans up generated runtime files (encrypted message and public keys) at the end of execution.
+
 
 ### Code Quality
 
