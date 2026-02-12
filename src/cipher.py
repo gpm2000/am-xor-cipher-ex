@@ -15,14 +15,14 @@ derived from Diffie-Hellman key exchange combined with XOR cipher encryption.
     - Validate message integrity and authenticity
 """
 
-# pylint: disable=import-error,duplicate-code
+# pylint: disable=duplicate-code
 
 import logging
 
-from config import ENCRYPTED_MESSAGE_FILE, SECRET_MESSAGE_FILE
-from io_utils import read_text_file_utf8_bytes, write_base64_file
-from key_generator import get_shared_key_for_party, get_stretched_key
-from xor_utils import xor_cipher_bytes
+from src.config import ENCRYPTED_MESSAGE_FILE, SECRET_MESSAGE_FILE
+from src.io_utils import read_text_file_utf8_bytes, write_base64_file
+from src.key_generator import get_shared_key_for_party, get_stretched_key
+from src.xor_utils import xor_cipher_bytes
 
 logger = logging.getLogger(__name__)
 

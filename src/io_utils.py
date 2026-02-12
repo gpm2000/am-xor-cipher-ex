@@ -3,15 +3,13 @@
 Provides JSON helpers and Base64 file helpers used by the cipher workflow.
 """
 
-# pylint: disable=import-error
-
 import base64
 import binascii
 import json
 import logging
 import os
 
-from config import DATA_DIR, ENCRYPTED_MESSAGE_FILE, PARTIES
+from src.config import DATA_DIR, ENCRYPTED_MESSAGE_FILE, PARTIES
 
 logger = logging.getLogger(__name__)
 

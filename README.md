@@ -15,8 +15,8 @@ This runs a complete DH key exchange and encryption/decryption test between Whit
 ### Encrypt a Message
 
 ```python
-from key_generator import generate_and_publish_public_key
-from cipher import encrypt_message
+from src.key_generator import generate_and_publish_public_key
+from src.cipher import encrypt_message
 
 # Generate public keys
 generate_and_publish_public_key("Martin")
@@ -29,7 +29,7 @@ encrypt_message("Martin", "Whitfield")
 ### Decrypt a Message
 
 ```python
-from decipher import decrypt_message
+from src.decipher import decrypt_message
 
 # Decrypt
 decrypt_message("Whitfield", "Martin")
@@ -410,9 +410,9 @@ echo 'Hello Whitfield, this is Martin!' > data/secret_message.txt
 
 # 2. Run in Python
 python3 << 'EOF'
-from key_generator import generate_and_publish_public_key
-from cipher import encrypt_message
-from decipher import decrypt_message
+from src.key_generator import generate_and_publish_public_key
+from src.cipher import encrypt_message
+from src.decipher import decrypt_message
 
 # Generate public keys
 generate_and_publish_public_key("Martin")
