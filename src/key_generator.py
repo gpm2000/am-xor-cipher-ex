@@ -25,14 +25,12 @@ This module provides functions for:
     - Store secrets in environment variables (for sensitive systems)
 """
 
-# pylint: disable=import-error
-
 import hashlib
 import logging
 from os import path
 
-from config import DATA_DIR, DH_PARAMS_FILE
-from io_utils import get_json_value, save_json
+from src.config import DATA_DIR, DH_PARAMS_FILE
+from src.io_utils import get_json_value, save_json
 
 logger = logging.getLogger(__name__)
 

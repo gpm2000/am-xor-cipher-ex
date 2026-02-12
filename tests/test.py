@@ -10,14 +10,14 @@ import sys
 import os
 import logging
 
-# pylint: disable=wrong-import-position, import-error
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# pylint: disable=wrong-import-position
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from cipher import encrypt_message
-from decipher import decrypt_message
-from io_utils import cleanup_runtime_files
-from key_generator import generate_and_publish_public_key
-# pylint: enable=wrong-import-position, import-error
+from src.cipher import encrypt_message
+from src.decipher import decrypt_message
+from src.io_utils import cleanup_runtime_files
+from src.key_generator import generate_and_publish_public_key
+# pylint: enable=wrong-import-position
 
 # Configure logging
 logging.basicConfig(
