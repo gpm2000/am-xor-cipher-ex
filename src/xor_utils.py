@@ -42,4 +42,3 @@ def xor_cipher_bytes(data, key):
         data_bytes[index] ^= key_bytes[index % key_length]
 
     return bytes(data_bytes)
-

@@ -3,6 +3,8 @@
 Provides JSON helpers and Base64 file helpers used by the cipher workflow.
 """
 
+# pylint: disable=import-error
+
 import base64
 import binascii
 import json
