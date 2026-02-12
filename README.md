@@ -43,7 +43,7 @@ src/
 ├── decipher.py        # Decryption
 ├── key_generator.py   # DH key exchange
 ├── xor_utils.py       # XOR operations
-├── json_utils.py      # File I/O
+├── io_utils.py        # File I/O
 ├── config.py          # Configuration
 └── __init__.py        # Package exports
 
@@ -97,6 +97,8 @@ Run tests:
 ```bash
 python tests/test.py
 ```
+
+Note: The test run cleans up generated runtime files (encrypted message and public keys) at the end of execution.
 
 
 ### Code Quality
@@ -176,21 +178,25 @@ Key functions:
 Implements the optimized XOR cipher with binary-safe encoding.
 
 ```python
-xor_cipher(text, key) -> bytes
+xor_cipher_bytes(data, key) -> bytes
 ```
 
-Performs XOR encryption/decryption. Returns bytes to safely handle arbitrary binary data produced by XOR operations. Since XOR is symmetric, the same function works for both operations.
+Performs XOR encryption/decryption on raw bytes. Returns bytes to safely handle arbitrary binary data produced by XOR operations. Since XOR is symmetric, the same function works for both operations.
 
 **Encoding Strategy:**
-- Uses `latin-1` encoding internally to preserve all byte values (0-255)
+- Uses byte-based XOR to preserve all byte values (0-255)
 - Enables safe handling of Unicode characters (UTF-8) in source messages
 - Returns raw bytes that can be safely Base64-encoded for storage
 
-### json_utils.py
-Provides JSON file utilities.
+### io_utils.py
+Provides JSON, Base64, and UTF-8 text file utilities.
 
 - `get_json_value(filepath, param)`: Read value from JSON file
 - `save_json(filepath, data)`: Write data to JSON file
+- `read_base64_file(filepath)`: Read Base64 text and return bytes
+- `write_base64_file(filepath, data)`: Write bytes as Base64 text
+- `read_text_file_utf8(filepath)`: Read UTF-8 text and return string
+- `read_text_file_utf8_bytes(filepath)`: Read UTF-8 text and return bytes
 
 ## Technologies & Packages
 
@@ -290,7 +296,7 @@ This implementation fully supports Unicode characters in messages:
 
 **Implementation Details:**
 1. Messages are first encoded as UTF-8 bytes (variable-length encoding)
-2. UTF-8 bytes are converted to `latin-1` string representation for XOR processing
+2. UTF-8 bytes are XORed directly as binary data
 3. XOR produces arbitrary binary data (bytes 0-255)
 4. Binary result is Base64-encoded for safe text file storage
 5. During decryption, Base64 is decoded, XOR reversed, then decoded back to UTF-8

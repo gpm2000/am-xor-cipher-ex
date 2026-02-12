@@ -9,7 +9,7 @@ a secure key vault. This implementation is for demonstration only.
 
 Modules:
     config: Centralized configuration (party names, file paths)
-    json_utils: JSON file I/O utilities
+    io_utils: JSON and Base64 file I/O utilities
     key_generator: Diffie-Hellman key exchange functions
     xor_utils: XOR cipher implementation
     cipher: Encryption module (Phase 2 for Whitfield)
@@ -22,7 +22,7 @@ __version__ = "1.0.0"
 __author__ = "Education"
 __all__ = [
     "config",
-    "json_utils",
+    "io_utils",
     "key_generator",
     "xor_utils",
     "cipher",

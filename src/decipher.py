@@ -17,13 +17,12 @@ derived from Diffie-Hellman key exchange combined with XOR cipher decryption.
 
 # pylint: disable=import-error,duplicate-code
 
-import base64
-import binascii
 import logging
 
 from config import ENCRYPTED_MESSAGE_FILE
+from io_utils import read_base64_file
 from key_generator import get_shared_key_for_party, get_stretched_key
-from xor_utils import xor_cipher
+from xor_utils import xor_cipher_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -61,43 +60,13 @@ def decrypt_message(party, other_party) -> None:
         raise RuntimeError(error_message)
 
     # Read encrypted message from file
-    try:
-        logger.debug("Reading encrypted message from %s", ENCRYPTED_MESSAGE_FILE)
-        with open(ENCRYPTED_MESSAGE_FILE, "r", encoding="utf-8") as file:
-            encrypted_b64 = file.read()
-
-        if not encrypted_b64:
-            logger.warning("Encrypted message file is empty")
-            raise ValueError("Encrypted message file is empty")
-
-        # Decode Base64 to get original encrypted bytes
-        encrypted_bytes = base64.b64decode(encrypted_b64)
-        # Convert bytes to string using latin-1 (preserves all byte values as characters)
-        encrypted_text = encrypted_bytes.decode('latin-1')
-
-    except FileNotFoundError as exc:
-        logger.error("Encrypted message file not found: %s", ENCRYPTED_MESSAGE_FILE)
-        error_message = (
-            f"Encrypted message file not found: {ENCRYPTED_MESSAGE_FILE}"
-        )
-        raise FileNotFoundError(error_message) from exc
-    except PermissionError as exc:
-        logger.error("Permission denied reading: %s", ENCRYPTED_MESSAGE_FILE)
-        error_message = (
-            f"Cannot read encrypted message file: {ENCRYPTED_MESSAGE_FILE}"
-        )
-        raise PermissionError(error_message) from exc
-    except (ValueError, binascii.Error) as exc:
-        logger.error("Failed to decode Base64 encrypted message: %s", exc)
-        error_message = (
-            f"Invalid Base64 format in encrypted message file: {exc}"
-        )
-        raise ValueError(error_message) from exc
+    logger.debug("Reading encrypted message from %s", ENCRYPTED_MESSAGE_FILE)
+    encrypted_bytes = read_base64_file(ENCRYPTED_MESSAGE_FILE)
 
     # Decrypt message using XOR cipher with stretched key
     # Use byte length of encrypted data for key stretching
     otp_key = get_stretched_key(secure_key, len(encrypted_bytes))
-    decrypted_bytes = xor_cipher(encrypted_text, otp_key)
+    decrypted_bytes = xor_cipher_bytes(encrypted_bytes, otp_key)
 
     # Decode decrypted bytes as UTF-8 to get plaintext
     try:
