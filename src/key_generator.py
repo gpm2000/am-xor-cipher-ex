@@ -32,7 +32,7 @@ import logging
 from os import path
 
 from config import DATA_DIR, DH_PARAMS_FILE
-from json_utils import get_json_value, save_json
+from io_utils import get_json_value, save_json
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +155,9 @@ def get_shared_key_for_party(party, other_party):
 def compute_secured_shared_key(generator, prime, secret, public_key):
     """Compute the shared secret key using Diffie-Hellman protocol.
 
+    secure key = ((shared public key from a))^ (secret b) % P) % P
+    secure key = ((shared public key from b))^ (secret a) % P) % P
+
     Args:
         generator: The generator value (G) from DH parameters.
         prime: The prime modulus (P) from DH parameters.
@@ -164,8 +167,6 @@ def compute_secured_shared_key(generator, prime, secret, public_key):
     Returns:
         A SHA256 hash of the computed shared secret as a hexadecimal string.
     """
-    # secure key = ((shared public key from a))^ (secret b) % P) % P
-    # secure key = ((shared public key from b))^ (secret a) % P) % P
     print(
         f"Calculating secured common key with generator={generator}, "
         f"prime={prime}, secret={secret}, public_key={public_key}"

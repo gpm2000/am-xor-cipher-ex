@@ -17,12 +17,12 @@ derived from Diffie-Hellman key exchange combined with XOR cipher encryption.
 
 # pylint: disable=import-error,duplicate-code
 
-import base64
 import logging
 
 from config import ENCRYPTED_MESSAGE_FILE, SECRET_MESSAGE_FILE
+from io_utils import read_text_file_utf8_bytes, write_base64_file
 from key_generator import get_shared_key_for_party, get_stretched_key
-from xor_utils import xor_cipher
+from xor_utils import xor_cipher_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -60,46 +60,14 @@ def encrypt_message(party, other_party) -> None:
         raise RuntimeError(error_message)
 
     # Read secret message from file
-    try:
-        logger.debug("Reading secret message from %s", SECRET_MESSAGE_FILE)
-        with open(SECRET_MESSAGE_FILE, "r", encoding="utf-8") as file:
-            secret_message = file.read()
-
-        if not secret_message:
-            logger.warning("Secret message file is empty")
-    except FileNotFoundError as exc:
-        logger.error("Secret message file not found: %s", SECRET_MESSAGE_FILE)
-        error_message = (
-            f"Secret message file not found: {SECRET_MESSAGE_FILE}"
-        )
-        raise FileNotFoundError(error_message) from exc
-    except PermissionError as exc:
-        logger.error("Permission denied reading: %s", SECRET_MESSAGE_FILE)
-        error_message = (
-            f"Cannot read secret message file: {SECRET_MESSAGE_FILE}"
-        )
-        raise PermissionError(error_message) from exc
-
-    otp_key = get_stretched_key(secure_key, len(secret_message.encode('utf-8')))
-    # Convert UTF-8 bytes to latin-1 string for XOR processing
-    secret_message_latin1 = secret_message.encode('utf-8').decode('latin-1')
-    encrypted_bytes = xor_cipher(secret_message_latin1, otp_key)
+    secret_message_bytes = read_text_file_utf8_bytes(SECRET_MESSAGE_FILE)
+    if not secret_message_bytes:
+        logger.warning("Secret message file is empty")
+    otp_key = get_stretched_key(secure_key, len(secret_message_bytes))
+    encrypted_bytes = xor_cipher_bytes(secret_message_bytes, otp_key)
     print(f"Encrypted message: {encrypted_bytes[:50]}...")  # Show first 50 bytes
 
     # Save encrypted message to file as Base64 (binary-safe encoding)
-    try:
-        logger.debug("Writing encrypted message to %s", ENCRYPTED_MESSAGE_FILE)
-        # Encode encrypted bytes as Base64 for safe text file storage
-        encrypted_b64 = base64.b64encode(encrypted_bytes).decode('ascii')
-        with open(ENCRYPTED_MESSAGE_FILE, "w", encoding="utf-8") as file:
-            file.write(encrypted_b64)
-        logger.info("Encryption completed successfully")
-    except PermissionError as exc:
-        logger.error("Permission denied writing to: %s", ENCRYPTED_MESSAGE_FILE)
-        error_message = (
-            f"Cannot write encrypted message file: {ENCRYPTED_MESSAGE_FILE}"
-        )
-        raise PermissionError(error_message) from exc
-    except OSError as exc:
-        logger.error("OS error writing encrypted message: %s", exc)
-        raise OSError(f"Failed to write encrypted message: {exc}") from exc
+    logger.debug("Writing encrypted message to %s", ENCRYPTED_MESSAGE_FILE)
+    write_base64_file(ENCRYPTED_MESSAGE_FILE, encrypted_bytes)
+    logger.info("Encryption completed successfully")
